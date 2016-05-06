@@ -21,27 +21,59 @@ files=arcpy.GetParameterAsText(1)
 #Altitude interval for Surface Volume calculations
 interval= int(arcpy.GetParameterAsText(2))
 
+#get the proper ratio without the use of locale.atof
+
+def properratio(ratio):
+    if '.' in ratio:
+        ratiolist=ratio.split('.')
+        ratioint= int(ratiolist[0])
+        ratiodec= ratiolist[1][:2]
+        if len(ratiodec)==2:
+            ratiodec=int(ratiodec)
+            ratio=ratioint+(ratiodec/100)
+        else:
+            ratiodec=int(ratiodec)
+            ratio=ratioint+(ratiodec/10)
+    elif "," in ratio:
+        ratiolist=ratio.split(',')
+        ratioint= int(ratiolist[0])
+        ratiodec= ratiolist[1][:2]
+        if len(ratiodec)==2:
+            ratiodec=int(ratiodec)
+            ratio=ratioint+(ratiodec/100)
+        else:
+            ratiodec=int(ratiodec)
+            ratio=ratioint+(ratiodec/10)
+    else:
+        try:
+            ratio=int(ratio)
+        except:
+            arcpy.AddError("The script could not read your ratio because it is not a number")
+            quit()
+    arcpy.AddMessage (ratio)
+    return ratio
+
 #Interval for AAR ratios
 ratioAARandInterval= arcpy.GetParameterAsText(3)
 my_list=ratioAARandInterval.split()
-minratio=locale.atof(my_list [0])#floating of the input in local style
+minratio=properratio(my_list[0])#floating of the input
 minratio=int(minratio*1000)
-maxratio=locale.atof(my_list [1])
+maxratio=properratio(my_list[1])#floating of the input
 maxratio=int(maxratio*1000)
-intervalAAR=locale.atof(my_list [2])
+intervalAAR=properratio(my_list[2])#floating of the input
 intervalAAR=int(intervalAAR*1000)
 maxratio=maxratio+intervalAAR#I make this to cover the last maximum ratio in range
 
 #Interval for AABR ratios
 ratioAABRandInterval= arcpy.GetParameterAsText(4)
 my_list2=ratioAABRandInterval.split()
-minABBR=locale.atof(my_list2 [0])
-minABBR=int(minABBR*1000)
-maxABBR= locale.atof(my_list2 [1])
-maxABBR=int(maxABBR*1000)
-intervalABBR=locale.atof(my_list2 [2])
-intervalABBR=int(intervalABBR*1000)
-maxABBR=maxABBR+intervalABBR#I make this to cover the last maximum ratio in range
+minAABR=properratio(my_list2[0])#floating of the input
+minAABR=int(minAABR*1000)
+maxAABR= properratio(my_list2[1])#floating of the input
+maxAABR=int(maxAABR*1000)
+intervalAABR=properratio(my_list2[2])#floating of the input
+intervalAABR=int(intervalAABR*1000)
+maxAABR=maxAABR+intervalAABR#I make this to cover the last maximum ratio in range
 
 #Maximum and minimum value of DEM
 upper=arcpy.GetRasterProperties_management(dem,"MAXIMUM")
@@ -250,8 +282,8 @@ with open(nombreOut,"a") as r:
     print(("The ELA AA is: %r" %(resultAA)), file=r)
 
     # AABR Calculation for the ratios in range
-    for ratio in range(minABBR, maxABBR, intervalABBR):
-        br= ratio/1000
+    for ratios in range(minAABR, maxAABR, intervalAABR):
+        br= ratios/1000
         refinf=minalt #first trial altitude
         valores_multi=[]
         valorAABR=[x*(y - refinf) for (x,y) in zip (resta, list_altitudes)]
@@ -280,3 +312,4 @@ with open(nombreOut,"a") as r:
     r.close # Close the .txt file
 arcpy.AddMessage (listELAS)
 arcpy.ContourList_3d(dem, nombreshp, listELAS)
+

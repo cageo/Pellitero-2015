@@ -13,25 +13,57 @@ jj=arcpy.env.workspace=arcpy.GetParameterAsText(0)
 #Altitude interval for Surface Volume calculations
 interval= int(arcpy.GetParameterAsText(1))
 
+#get the proper ratio without the use of locale.atof
+
+def properratio(ratio):
+    if '.' in ratio:
+        ratiolist=ratio.split('.')
+        ratioint= int(ratiolist[0])
+        ratiodec= ratiolist[1][:2]
+        if len(ratiodec)==2:
+            ratiodec=int(ratiodec)
+            ratio=ratioint+(ratiodec/100)
+        else:
+            ratiodec=int(ratiodec)
+            ratio=ratioint+(ratiodec/10)
+    elif "," in ratio:
+        ratiolist=ratio.split(',')
+        ratioint= int(ratiolist[0])
+        ratiodec= ratiolist[1][:2]
+        if len(ratiodec)==2:
+            ratiodec=int(ratiodec)
+            ratio=ratioint+(ratiodec/100)
+        else:
+            ratiodec=int(ratiodec)
+            ratio=ratioint+(ratiodec/10)
+    else:
+        try:
+            ratio=int(ratio)
+        except:
+            arcpy.AddError("The script could not read your ratio because it is not a number")
+            quit()
+    arcpy.AddMessage (ratio)
+    return ratio
+
 #Interval for AAR ratios
 ratioAARandInterval= arcpy.GetParameterAsText(2)
 my_list=ratioAARandInterval.split()
-minratio=locale.atof(my_list [0])#floating of the input in local style
+minratio=properratio(my_list[0])#floating of the input
 minratio=int(minratio*1000)
-maxratio=locale.atof(my_list [1])
+maxratio=properratio(my_list[1])#floating of the input
 maxratio=int(maxratio*1000)
-intervalAAR=locale.atof(my_list [2])
+intervalAAR=properratio(my_list[2])#floating of the input
 intervalAAR=int(intervalAAR*1000)
 maxratio=maxratio+intervalAAR#I make this to cover the last maximum ratio in range
 
 #Interval for AABR ratios
 ratioAABRandInterval= arcpy.GetParameterAsText(3)
 my_list2=ratioAABRandInterval.split()
-minAABR=locale.atof(my_list2 [0])
+minAABR=properratio(my_list2[0])#floating of the input
 minAABR=int(minAABR*1000)
-maxAABR= locale.atof(my_list2 [1])
+maxAABR= properratio(my_list2[1])#floating of the input
 maxAABR=int(maxAABR*1000)
-intervalAABR=locale.atof(my_list2 [2])
+intervalAABR=properratio(my_list2[2])#floating of the input
 intervalAABR=int(intervalAABR*1000)
 maxAABR=maxAABR+intervalAABR#I make this to cover the last maximum ratio in range
 
